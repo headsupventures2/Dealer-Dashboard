@@ -26,15 +26,20 @@ function PortalShell({ children }: { children: ReactNode }) {
           <Link href="/portal">
             <Wordmark />
           </Link>
-          <button
-            onClick={async () => {
-              await signOut();
-              router.replace("/login");
-            }}
-            className="min-h-11 text-sm font-semibold text-navy/70 hover:text-navy"
-          >
-            Sign out
-          </button>
+          <nav className="flex items-center gap-4 text-sm font-semibold sm:gap-6">
+            <Link href="/portal/history" className="hidden text-navy/70 hover:text-navy sm:block">
+              Vehicle history
+            </Link>
+            <button
+              onClick={async () => {
+                await signOut();
+                router.replace("/login");
+              }}
+              className="min-h-11 text-navy/70 hover:text-navy"
+            >
+              Sign out
+            </button>
+          </nav>
         </div>
       </header>
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-8 sm:py-12">{children}</main>
