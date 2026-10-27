@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
+import { ModeBanner } from "@/components/mode-banner";
 import { RequireRole, useAuth } from "@/components/auth";
 import { CompaniesProvider, useCompanies } from "@/components/companies";
-import { Footer, Logo, PreviewBanner, Wordmark } from "@/components/ui";
+import { Footer, Logo, Wordmark } from "@/components/ui";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
@@ -43,7 +44,7 @@ function AdminShell({ children }: { children: ReactNode }) {
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <PreviewBanner />
+          <ModeBanner />
           <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:px-8 sm:py-10">{children}</main>
           <Footer />
         </div>

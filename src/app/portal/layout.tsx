@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
+import { ModeBanner } from "@/components/mode-banner";
 import { RequireRole, useAuth } from "@/components/auth";
-import { Footer, PreviewBanner, Wordmark } from "@/components/ui";
+import { Footer, Wordmark } from "@/components/ui";
 
 export default function PortalLayout({ children }: { children: ReactNode }) {
   return (
@@ -20,7 +21,7 @@ function PortalShell({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <PreviewBanner />
+      <ModeBanner />
       <header className="border-b border-line bg-cream">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-8">
           <Link href="/portal">

@@ -2,7 +2,7 @@ import type { Company, CompanyInput, Job, JobPatch, Photo, PhotoType, Profile, R
 
 /** One interface, two backends: Supabase (live) and the in-browser preview store. */
 export interface Store {
-  mode: "supabase" | "preview";
+  mode: "supabase" | "preview" | "demo";
   currentProfile(): Promise<Profile | null>;
   signIn(email: string, password: string): Promise<Profile>;
   signOut(): Promise<void>;

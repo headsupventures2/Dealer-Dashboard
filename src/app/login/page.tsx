@@ -2,18 +2,21 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { ModeBanner } from "@/components/mode-banner";
 import { homeFor, useAuth } from "@/components/auth";
-import { Button, ErrorText, Field, Footer, Logo, PreviewBanner } from "@/components/ui";
+import { Button, ErrorText, Field, Footer, Logo } from "@/components/ui";
 import { isSupabaseConfigured } from "@/lib/store";
 import { PREVIEW_ADMIN } from "@/lib/store/preview";
+import type { Role } from "@/lib/types";
 
 export default function LoginPage() {
-  const { profile, loading, signIn } = useAuth();
+  const { profile, loading, signIn, startDemo } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [demoBusy, setDemoBusy] = useState<Role | null>(null);
 
   useEffect(() => {
     if (!loading && profile) router.replace(homeFor(profile.role));
@@ -35,9 +38,21 @@ export default function LoginPage() {
     setBusy(false);
   }
 
+  async function openDemo(role: Role) {
+    setDemoBusy(role);
+    setError("");
+    try {
+      const p = await startDemo(role, true);
+      router.replace(homeFor(p.role));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not load the demo");
+    }
+    setDemoBusy(null);
+  }
+
   return (
     <>
-      <PreviewBanner />
+      <ModeBanner />
       <main className="flex flex-1 flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-sm">
           <div className="mb-6 flex justify-center">
@@ -68,6 +83,18 @@ export default function LoginPage() {
                 {busy ? "Signing in…" : "Sign in"}
               </Button>
             </form>
+          </div>
+          <div className="mt-5 rounded-2xl border border-line bg-white/60 p-5 text-center">
+            <p className="font-brand font-bold">See it in action</p>
+            <p className="mt-1 text-sm text-navy/60">Explore with sample data. No real client info is shown.</p>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <Button variant="secondary" disabled={demoBusy !== null} onClick={() => openDemo("client")}>
+                {demoBusy === "client" ? "Loading…" : "Dealer view"}
+              </Button>
+              <Button variant="ghost" disabled={demoBusy !== null} onClick={() => openDemo("admin")}>
+                {demoBusy === "admin" ? "Loading…" : "Admin view"}
+              </Button>
+            </div>
           </div>
           {!isSupabaseConfigured && (
             <p className="mt-4 text-center text-xs text-navy/55">

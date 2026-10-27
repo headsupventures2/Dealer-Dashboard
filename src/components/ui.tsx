@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from "react";
-import { isSupabaseConfigured } from "@/lib/store";
 
 /** Emblem + lettering for headers. Matches the logo: navy LEADING EDGE, maroon spaced DETAILING. */
 export function Wordmark({ light = false }: { light?: boolean }) {
@@ -39,15 +38,6 @@ export function Footer() {
     <footer className="mt-auto border-t border-line px-4 py-5 text-center font-brand text-xs font-semibold uppercase tracking-[0.25em] text-navy/50">
       Leading Edge Detailing · Aviation-Level Care
     </footer>
-  );
-}
-
-export function PreviewBanner() {
-  if (isSupabaseConfigured) return null;
-  return (
-    <div className="bg-maroon px-4 py-1.5 text-center text-xs text-white">
-      Preview mode — data is saved in this browser only. Connect Supabase to go live.
-    </div>
   );
 }
 
