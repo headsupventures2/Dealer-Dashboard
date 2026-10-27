@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { Company, Job, Profile } from "../types";
+import type { Company, Job, Photo, Profile } from "../types";
 import type { Store } from "./types";
 
 let client: SupabaseClient | null = null;
@@ -127,9 +127,65 @@ export const supabaseStore: Store = {
     return toJob(data);
   },
 
+  async getJob(id) {
+    const { data, error } = await supabase().from("jobs").select("*").eq("id", id).maybeSingle();
+    if (error) throw error;
+    return data ? toJob(data) : null;
+  },
+
   async updateJob(id, patch) {
     const { data, error } = await supabase().from("jobs").update(patch).eq("id", id).select().single();
     if (error) throw error;
     return toJob(data);
   },
+
+  async getInternalNotes(jobId) {
+    const { data, error } = await supabase().from("job_internal_notes").select("notes").eq("job_id", jobId).maybeSingle();
+    if (error) throw error;
+    return data?.notes ?? "";
+  },
+
+  async setInternalNotes(jobId, notes) {
+    const { error } = await supabase()
+      .from("job_internal_notes")
+      .upsert({ job_id: jobId, notes, updated_at: new Date().toISOString() });
+    if (error) throw error;
+  },
+
+  async listPhotos(jobId) {
+    const { data, error } = await supabase().from("photos").select("*").eq("job_id", jobId).order("created_at");
+    if (error) throw error;
+    return withUrls(data);
+  },
+
+  async uploadPhotos(job, type, images) {
+    const rows = [];
+    for (const blob of images) {
+      const path = `${job.company_id}/${job.id}/${crypto.randomUUID()}.jpg`;
+      const up = await supabase().storage.from(BUCKET).upload(path, blob, { contentType: "image/jpeg" });
+      if (up.error) throw up.error;
+      rows.push({ job_id: job.id, type, storage_path: path });
+    }
+    const { data, error } = await supabase().from("photos").insert(rows).select();
+    if (error) throw error;
+    return withUrls(data);
+  },
+
+  async deletePhoto(photoId) {
+    const { data, error } = await supabase().from("photos").delete().eq("id", photoId).select("storage_path").single();
+    if (error) throw error;
+    await supabase().storage.from(BUCKET).remove([data.storage_path]);
+  },
 };
+
+const BUCKET = "job-photos";
+
+// The bucket is private, so photos are shown through short-lived signed URLs.
+async function withUrls(rows: { id: string; job_id: string; type: Photo["type"]; storage_path: string; created_at: string }[]) {
+  if (rows.length === 0) return [];
+  const { data, error } = await supabase()
+    .storage.from(BUCKET)
+    .createSignedUrls(rows.map((r) => r.storage_path), 60 * 60);
+  if (error) throw error;
+  return rows.map((r, i): Photo => ({ id: r.id, job_id: r.job_id, type: r.type, url: data[i].signedUrl ?? "", created_at: r.created_at }));
+}

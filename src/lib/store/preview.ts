@@ -1,4 +1,4 @@
-import { lockPrice, type Company, type CompanyInput, type Job, type Profile } from "../types";
+import { lockPrice, type Company, type CompanyInput, type Job, type Photo, type PhotoType, type Profile } from "../types";
 import type { Store } from "./types";
 
 // Browser-only store used when Supabase isn't configured, so the app can be
@@ -12,6 +12,7 @@ interface PreviewDb {
   users: PreviewUser[];
   companies: Company[];
   jobs: Job[];
+  internalNotes: Record<string, string>;
   sessionUserId: string | null;
 }
 
@@ -24,6 +25,7 @@ function seed(): PreviewDb {
     users: [{ id: "admin-1", role: "admin", company_id: null, ...PREVIEW_ADMIN }],
     companies: [],
     jobs: [],
+    internalNotes: {},
     sessionUserId: null,
   };
 }
@@ -31,7 +33,7 @@ function seed(): PreviewDb {
 function load(): PreviewDb {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return { jobs: [], ...JSON.parse(raw) } as PreviewDb;
+    if (raw) return { jobs: [], internalNotes: {}, ...JSON.parse(raw) } as PreviewDb;
   } catch {}
   const db = seed();
   save(db);
@@ -42,6 +44,41 @@ function save(db: PreviewDb) {
   try {
     localStorage.setItem(KEY, JSON.stringify(db));
   } catch {}
+}
+
+// Photos are too big for localStorage, so they go in IndexedDB.
+interface StoredPhoto {
+  id: string;
+  job_id: string;
+  type: PhotoType;
+  blob: Blob;
+  created_at: string;
+}
+
+function photoDb(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open("led-preview-photos", 1);
+    req.onupgradeneeded = () => req.result.createObjectStore("photos", { keyPath: "id" }).createIndex("job_id", "job_id");
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function photoTx<T>(mode: IDBTransactionMode, run: (s: IDBObjectStore) => IDBRequest<T> | void): Promise<T> {
+  const db = await photoDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("photos", mode);
+    const req = run(tx.objectStore("photos"));
+    tx.oncomplete = () => resolve(req ? req.result : (undefined as T));
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+const objectUrls = new Map<string, string>();
+
+function toPhoto(p: StoredPhoto): Photo {
+  if (!objectUrls.has(p.id)) objectUrls.set(p.id, URL.createObjectURL(p.blob));
+  return { id: p.id, job_id: p.job_id, type: p.type, url: objectUrls.get(p.id)!, created_at: p.created_at };
 }
 
 function toProfile(u: PreviewUser): Profile {
@@ -160,6 +197,10 @@ export const previewStore: Store = {
     return job;
   },
 
+  async getJob(id) {
+    return (await this.listJobs()).find((j) => j.id === id) ?? null;
+  },
+
   async updateJob(id, patch) {
     const db = load();
     requireAdmin(db);
@@ -175,5 +216,45 @@ export const previewStore: Store = {
     db.jobs[i] = next;
     save(db);
     return next;
+  },
+
+  async getInternalNotes(jobId) {
+    const db = load();
+    requireAdmin(db);
+    return db.internalNotes[jobId] ?? "";
+  },
+
+  async setInternalNotes(jobId, notes) {
+    const db = load();
+    requireAdmin(db);
+    db.internalNotes[jobId] = notes;
+    save(db);
+  },
+
+  async listPhotos(jobId) {
+    if (!(await this.getJob(jobId))) return [];
+    const rows = await photoTx<StoredPhoto[]>("readonly", (s) => s.index("job_id").getAll(jobId));
+    return rows.sort((a, b) => a.created_at.localeCompare(b.created_at)).map(toPhoto);
+  },
+
+  async uploadPhotos(job, type, images) {
+    requireAdmin(load());
+    const rows: StoredPhoto[] = images.map((blob) => ({
+      id: crypto.randomUUID(),
+      job_id: job.id,
+      type,
+      blob,
+      created_at: new Date().toISOString(),
+    }));
+    await photoTx("readwrite", (s) => void rows.forEach((r) => s.put(r)));
+    return rows.map(toPhoto);
+  },
+
+  async deletePhoto(photoId) {
+    requireAdmin(load());
+    await photoTx("readwrite", (s) => s.delete(photoId));
+    const url = objectUrls.get(photoId);
+    if (url) URL.revokeObjectURL(url);
+    objectUrls.delete(photoId);
   },
 };

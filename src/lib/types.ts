@@ -103,7 +103,30 @@ export type RequestInput = Pick<
   | "preferred_date"
 >;
 
-export type JobPatch = Partial<Pick<Job, "status" | "scheduled_at">>;
+export type JobPatch = Partial<
+  Pick<
+    Job,
+    | "status"
+    | "scheduled_at"
+    | "checklist"
+    | "client_notes"
+    | "fuel_gallons"
+    | "fuel_amount"
+    | "completed_at"
+    | "price_at_completion"
+    | "cost_at_completion"
+  >
+>;
+
+export type PhotoType = "before" | "after";
+
+export interface Photo {
+  id: string;
+  job_id: string;
+  type: PhotoType;
+  url: string; // display URL (signed URL or object URL)
+  created_at: string;
+}
 
 export function serviceLabel(type: ServiceType) {
   return SERVICES.find((s) => s.type === type)?.label ?? type;

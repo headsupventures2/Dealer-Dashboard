@@ -23,7 +23,7 @@ export function JobWhen({ job }: { job: Job }) {
   return <span className="text-navy/50">Not scheduled yet</span>;
 }
 
-export function JobHeading({ job }: { job: Job }) {
+export function JobHeading({ job, large = false }: { job: Job; large?: boolean }) {
   const sub =
     job.service_type === "lot_rinse"
       ? null
@@ -31,7 +31,7 @@ export function JobHeading({ job }: { job: Job }) {
   return (
     <div className="min-w-0">
       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-rust">{serviceLabel(job.service_type)}</p>
-      <p className="mt-0.5 truncate font-semibold">{jobTitle(job)}</p>
+      <p className={`mt-0.5 font-semibold ${large ? "font-brand text-2xl font-bold" : "truncate"}`}>{jobTitle(job)}</p>
       {sub && <p className="truncate text-sm text-navy/60">{sub}</p>}
     </div>
   );

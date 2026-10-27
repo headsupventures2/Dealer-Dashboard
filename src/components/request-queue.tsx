@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ChecklistChips, JobHeading, JobWhen, StatusTag } from "@/components/jobs";
-import { Button, Card } from "@/components/ui";
-import { dateTime, toLocalInput } from "@/lib/format";
+import { Button, ButtonLink, Card } from "@/components/ui";
+import { dateTime, money, toLocalInput } from "@/lib/format";
 import { store } from "@/lib/store";
 import { STATUSES, type Job, type JobStatus } from "@/lib/types";
 
@@ -89,7 +90,9 @@ function QueueCard({ job, onChange }: { job: Job; onChange(job: Job): void }) {
   return (
     <Card className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <JobHeading job={job} />
+        <Link href={`/admin/jobs/${job.id}`} className="min-w-0 hover:opacity-80">
+          <JobHeading job={job} />
+        </Link>
         <div className="flex flex-col items-start gap-1 text-sm sm:items-end">
           <StatusTag status={job.status} />
           <JobWhen job={job} />
@@ -143,7 +146,15 @@ function QueueCard({ job, onChange }: { job: Job; onChange(job: Job): void }) {
         </div>
       )}
 
-      <p className="text-xs text-navy/45">Requested {dateTime(job.created_at)}</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-xs text-navy/45">
+          Requested {dateTime(job.created_at)}
+          {job.status === "completed" && <> · Completed {dateTime(job.completed_at)} · {money(job.price_at_completion)}</>}
+        </p>
+        <ButtonLink href={`/admin/jobs/${job.id}`} variant="ghost" className="min-h-10 px-4 text-sm">
+          Open job →
+        </ButtonLink>
+      </div>
     </Card>
   );
 }
