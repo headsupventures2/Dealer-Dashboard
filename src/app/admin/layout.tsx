@@ -73,6 +73,9 @@ function Sidebar({ onNavigate }: { onNavigate(): void }) {
         <Link href="/admin" onClick={onNavigate} className={item("/admin", pathname === "/admin")}>
           Overview
         </Link>
+        <Link href="/admin/calendar" onClick={onNavigate} className={item("/admin/calendar", pathname === "/admin/calendar")}>
+          Calendar
+        </Link>
       </nav>
 
       <div className="mb-2 mt-6 flex items-center justify-between px-3">
