@@ -10,9 +10,15 @@
   --color-line: #e7dcc9;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-brand: var(--font-montserrat);
 }
 
 body {
   background: var(--color-cream);
   color: var(--color-navy);
+}
+
+h1,
+h2 {
+  font-family: var(--font-montserrat);
 }

@@ -1,4 +1,4 @@
-import type { Company, CompanyInput, Profile } from "../types";
+import type { Company, CompanyInput, Job, JobPatch, Profile, RequestInput } from "../types";
 
 /** One interface, two backends: Supabase (live) and the in-browser preview store. */
 export interface Store {
@@ -14,4 +14,9 @@ export interface Store {
 
   listCompanyUsers(companyId: string): Promise<Profile[]>;
   createClientUser(companyId: string, email: string, password: string): Promise<Profile>;
+
+  /** Admins get every job (or one company's); clients only ever get their own company's. */
+  listJobs(companyId?: string): Promise<Job[]>;
+  createRequest(companyId: string, input: RequestInput): Promise<Job>;
+  updateJob(id: string, patch: JobPatch): Promise<Job>;
 }

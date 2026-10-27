@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { RequireRole, useAuth } from "@/components/auth";
 import { CompaniesProvider, useCompanies } from "@/components/companies";
-import { Footer, PreviewBanner, Wordmark } from "@/components/ui";
+import { Footer, Logo, PreviewBanner, Wordmark } from "@/components/ui";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
@@ -21,16 +21,15 @@ function AdminShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <PreviewBanner />
       <div className="flex flex-1 flex-col md:flex-row">
         {/* Mobile top bar */}
-        <header className="flex items-center justify-between bg-navy px-4 py-3 md:hidden">
+        <header className="flex items-center justify-between border-b border-line bg-cream px-4 py-3 md:hidden">
           <Link href="/admin">
-            <Wordmark light />
+            <Wordmark />
           </Link>
           <button
             onClick={() => setOpen((o) => !o)}
-            className="min-h-11 rounded-lg px-3 text-sm font-semibold text-white ring-1 ring-white/25"
+            className="min-h-11 rounded-lg bg-navy px-4 text-sm font-semibold text-white"
             aria-expanded={open}
           >
             {open ? "Close" : "Companies"}
@@ -44,6 +43,7 @@ function AdminShell({ children }: { children: ReactNode }) {
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
+          <PreviewBanner />
           <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:px-8 sm:py-10">{children}</main>
           <Footer />
         </div>
@@ -65,8 +65,8 @@ function Sidebar({ onNavigate }: { onNavigate(): void }) {
 
   return (
     <div className="flex h-full flex-col px-3 py-4 md:py-6">
-      <Link href="/admin" onClick={onNavigate} className="mb-8 hidden px-3 md:block">
-        <Wordmark light />
+      <Link href="/admin" onClick={onNavigate} className="mb-6 hidden rounded-xl bg-cream px-4 py-3 md:block">
+        <Logo className="mx-auto w-40" />
       </Link>
 
       <nav className="space-y-1">

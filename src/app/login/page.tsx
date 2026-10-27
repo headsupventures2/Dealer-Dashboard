@@ -3,7 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { homeFor, useAuth } from "@/components/auth";
-import { Button, ErrorText, Field, Footer, PreviewBanner, Wordmark } from "@/components/ui";
+import { Button, ErrorText, Field, Footer, Logo, PreviewBanner } from "@/components/ui";
 import { isSupabaseConfigured } from "@/lib/store";
 import { PREVIEW_ADMIN } from "@/lib/store/preview";
 
@@ -40,8 +40,8 @@ export default function LoginPage() {
       <PreviewBanner />
       <main className="flex flex-1 flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-sm">
-          <div className="mb-8 flex justify-center">
-            <Wordmark />
+          <div className="mb-6 flex justify-center">
+            <Logo className="w-60" />
           </div>
           <div className="rounded-2xl border border-line bg-white p-6 shadow-sm sm:p-8">
             <h1 className="text-xl font-semibold">Sign in</h1>

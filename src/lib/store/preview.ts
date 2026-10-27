@@ -1,4 +1,4 @@
-import type { Company, CompanyInput, Profile } from "../types";
+import { lockPrice, type Company, type CompanyInput, type Job, type Profile } from "../types";
 import type { Store } from "./types";
 
 // Browser-only store used when Supabase isn't configured, so the app can be
@@ -11,6 +11,7 @@ interface PreviewUser extends Profile {
 interface PreviewDb {
   users: PreviewUser[];
   companies: Company[];
+  jobs: Job[];
   sessionUserId: string | null;
 }
 
@@ -22,6 +23,7 @@ function seed(): PreviewDb {
   return {
     users: [{ id: "admin-1", role: "admin", company_id: null, ...PREVIEW_ADMIN }],
     companies: [],
+    jobs: [],
     sessionUserId: null,
   };
 }
@@ -29,7 +31,7 @@ function seed(): PreviewDb {
 function load(): PreviewDb {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return JSON.parse(raw) as PreviewDb;
+    if (raw) return { jobs: [], ...JSON.parse(raw) } as PreviewDb;
   } catch {}
   const db = seed();
   save(db);
@@ -46,9 +48,12 @@ function toProfile(u: PreviewUser): Profile {
   return { id: u.id, email: u.email, role: u.role, company_id: u.company_id };
 }
 
+function me(db: PreviewDb) {
+  return db.users.find((u) => u.id === db.sessionUserId);
+}
+
 function requireAdmin(db: PreviewDb) {
-  const me = db.users.find((u) => u.id === db.sessionUserId);
-  if (me?.role !== "admin") throw new Error("Admins only");
+  if (me(db)?.role !== "admin") throw new Error("Admins only");
 }
 
 export const previewStore: Store = {
@@ -120,5 +125,55 @@ export const previewStore: Store = {
     db.users.push(user);
     save(db);
     return toProfile(user);
+  },
+
+  async listJobs(companyId) {
+    const db = load();
+    const user = me(db);
+    if (!user) return [];
+    const scope = user.role === "admin" ? companyId : user.company_id;
+    return db.jobs
+      .filter((j) => !scope || j.company_id === scope)
+      .sort((a, b) => b.created_at.localeCompare(a.created_at));
+  },
+
+  async createRequest(companyId, input) {
+    const db = load();
+    const user = me(db);
+    if (!user) throw new Error("Not signed in");
+    const job: Job = {
+      ...input,
+      id: crypto.randomUUID(),
+      company_id: user.role === "admin" ? companyId : user.company_id!,
+      status: "new",
+      scheduled_at: null,
+      completed_at: null,
+      price_at_completion: null,
+      cost_at_completion: null,
+      fuel_gallons: null,
+      fuel_amount: null,
+      client_notes: null,
+      created_at: new Date().toISOString(),
+    };
+    db.jobs.push(job);
+    save(db);
+    return job;
+  },
+
+  async updateJob(id, patch) {
+    const db = load();
+    requireAdmin(db);
+    const i = db.jobs.findIndex((j) => j.id === id);
+    if (i < 0) throw new Error("Job not found");
+    const prev = db.jobs[i];
+    let next: Job = { ...prev, ...patch };
+    if (next.status === "completed" && prev.status !== "completed") {
+      const company = db.companies.find((c) => c.id === next.company_id)!;
+      next = { ...next, completed_at: next.completed_at ?? new Date().toISOString() };
+      if (next.price_at_completion == null) next = { ...next, ...lockPrice(next, company) };
+    }
+    db.jobs[i] = next;
+    save(db);
+    return next;
   },
 };

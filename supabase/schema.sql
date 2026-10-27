@@ -15,7 +15,7 @@ create table if not exists public.companies (
   -- Detail (per vehicle)
   price_per_vehicle numeric(10,2) not null default 0,
   cost_per_vehicle  numeric(10,2),
-  -- Lot rinse (per vehicle)
+  -- Lot rinse (per vehicle rinsed)
   lot_rinse_price   numeric(10,2) not null default 0,
   lot_rinse_cost    numeric(10,2),
   -- Fuel fill-up service fee (per vehicle, fuel billed separately)
@@ -49,6 +49,8 @@ create table if not exists public.jobs (
   vehicle_model       text,
   vehicle_color       text,
   stock_or_vin        text,
+  vehicle_count       integer not null default 1 check (vehicle_count > 0), -- lot rinse: vehicles on the lot
+  lot_area            text,          -- lot rinse: row / section
   request_notes       text,
   checklist           jsonb not null default '[]'::jsonb, -- [{key, label, done}]
   preferred_date      date,
@@ -56,8 +58,10 @@ create table if not exists public.jobs (
                         check (status in ('new', 'scheduled', 'in_progress', 'completed')),
   scheduled_at        timestamptz,
   completed_at        timestamptz,
-  price_at_completion numeric(10,2), -- locked when the job is completed
+  price_at_completion numeric(10,2), -- service revenue, locked when the job is completed
   cost_at_completion  numeric(10,2),
+  fuel_gallons        numeric(8,2),  -- fuel fill-up: recorded at completion
+  fuel_amount         numeric(10,2), -- fuel fill-up: fuel cost billed through to the dealer
   client_notes        text,          -- visible to the dealership
   created_by          uuid references auth.users(id),
   created_at          timestamptz not null default now()
@@ -114,18 +118,21 @@ begin
     new.price_at_completion := null;
     new.cost_at_completion := null;
     new.client_notes := null;
+    new.fuel_gallons := null;
+    new.fuel_amount := null;
     new.created_by := auth.uid();
   end if;
 
   if new.status = 'completed' and (tg_op = 'INSERT' or old.status is distinct from 'completed') then
     select * into c from public.companies where id = new.company_id;
     new.completed_at := coalesce(new.completed_at, now());
+    -- Rates are per vehicle; a lot rinse covers vehicle_count vehicles.
     if new.price_at_completion is null then
-      new.price_at_completion := case new.service_type
+      new.price_at_completion := new.vehicle_count * case new.service_type
         when 'lot_rinse' then c.lot_rinse_price
         when 'fuel_fill' then c.fuel_fill_price
         else c.price_per_vehicle end;
-      new.cost_at_completion := case new.service_type
+      new.cost_at_completion := new.vehicle_count * case new.service_type
         when 'lot_rinse' then c.lot_rinse_cost
         when 'fuel_fill' then c.fuel_fill_cost
         else c.cost_per_vehicle end;

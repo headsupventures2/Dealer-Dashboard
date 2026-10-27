@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { Company, Profile } from "../types";
+import type { Company, Job, Profile } from "../types";
 import type { Store } from "./types";
 
 let client: SupabaseClient | null = null;
@@ -23,6 +23,14 @@ function toCompany(row: Record<string, unknown>): Company {
   const c = { ...row } as Record<string, unknown>;
   for (const k of NUMERIC) c[k] = c[k] == null ? null : Number(c[k]);
   return c as unknown as Company;
+}
+
+const JOB_NUMERIC: (keyof Job)[] = ["price_at_completion", "cost_at_completion", "fuel_gallons", "fuel_amount"];
+
+function toJob(row: Record<string, unknown>): Job {
+  const j = { ...row } as Record<string, unknown>;
+  for (const k of JOB_NUMERIC) j[k] = j[k] == null ? null : Number(j[k]);
+  return j as unknown as Job;
 }
 
 async function profileFor(userId: string): Promise<Profile | null> {
@@ -99,5 +107,29 @@ export const supabaseStore: Store = {
     const body = await res.json();
     if (!res.ok) throw new Error(body.error ?? "Could not create login");
     return body.profile as Profile;
+  },
+
+  async listJobs(companyId) {
+    let q = supabase().from("jobs").select("*").order("created_at", { ascending: false });
+    if (companyId) q = q.eq("company_id", companyId);
+    const { data, error } = await q;
+    if (error) throw error;
+    return data.map(toJob);
+  },
+
+  async createRequest(companyId, input) {
+    const { data, error } = await supabase()
+      .from("jobs")
+      .insert({ ...input, company_id: companyId })
+      .select()
+      .single();
+    if (error) throw error;
+    return toJob(data);
+  },
+
+  async updateJob(id, patch) {
+    const { data, error } = await supabase().from("jobs").update(patch).eq("id", id).select().single();
+    if (error) throw error;
+    return toJob(data);
   },
 };

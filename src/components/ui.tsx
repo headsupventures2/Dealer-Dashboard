@@ -1,26 +1,42 @@
+import Image from "next/image";
 import Link from "next/link";
-import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from "react";
+import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from "react";
 import { isSupabaseConfigured } from "@/lib/store";
 
+/** Emblem + lettering for headers. Matches the logo: navy LEADING EDGE, maroon spaced DETAILING. */
 export function Wordmark({ light = false }: { light?: boolean }) {
   return (
-    <span className={`flex items-center gap-2.5 ${light ? "text-white" : "text-navy"}`}>
-      <span className="flex h-9 w-9 items-center justify-center rounded-md bg-rust text-sm font-bold tracking-tight text-white">
-        LE
-      </span>
-      <span className="leading-tight">
-        <span className="block text-[15px] font-semibold tracking-wide">Leading Edge</span>
-        <span className={`block text-[11px] uppercase tracking-[0.2em] ${light ? "text-white/70" : "text-navy/60"}`}>
-          Detailing
+    <span className="flex items-center gap-3">
+      <Image src="/logo-mark.png" alt="" width={320} height={164} priority className="h-9 w-auto" />
+      <span className="font-brand leading-none">
+        <span className={`block text-[15px] font-extrabold tracking-wide ${light ? "text-white" : "text-navy"}`}>
+          LEADING EDGE
+        </span>
+        <span className={`mt-1 block text-[10px] font-semibold tracking-[0.42em] ${light ? "text-cream/80" : "text-maroon"}`}>
+          DETAILING
         </span>
       </span>
     </span>
   );
 }
 
+/** The full logo, for the login page and the sidebar badge. */
+export function Logo({ className = "" }: { className?: string }) {
+  return (
+    <Image
+      src="/logo.png"
+      alt="Leading Edge Detailing"
+      width={720}
+      height={530}
+      priority
+      className={`h-auto ${className}`}
+    />
+  );
+}
+
 export function Footer() {
   return (
-    <footer className="mt-auto border-t border-line px-4 py-5 text-center text-xs uppercase tracking-[0.25em] text-navy/50">
+    <footer className="mt-auto border-t border-line px-4 py-5 text-center font-brand text-xs font-semibold uppercase tracking-[0.25em] text-navy/50">
       Leading Edge Detailing · Aviation-Level Care
     </footer>
   );
@@ -90,8 +106,13 @@ export function Field({
   );
 }
 
-export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={`rounded-xl border border-line bg-white p-5 shadow-sm sm:p-6 ${className}`}>{children}</div>;
+/** White panel. `flush` drops the padding for edge-to-edge lists. */
+export function Card({ children, className = "", flush = false }: { children: ReactNode; className?: string; flush?: boolean }) {
+  return (
+    <div className={`rounded-xl border border-line bg-white shadow-sm ${flush ? "overflow-hidden" : "p-5 sm:p-6"} ${className}`}>
+      {children}
+    </div>
+  );
 }
 
 export function PageTitle({ title, subtitle, action }: { title: string; subtitle?: string; action?: ReactNode }) {
@@ -109,4 +130,21 @@ export function PageTitle({ title, subtitle, action }: { title: string; subtitle
 export function ErrorText({ children }: { children: ReactNode }) {
   if (!children) return null;
   return <p className="rounded-lg bg-rust/10 px-3.5 py-2.5 text-sm text-rust-dark">{children}</p>;
+}
+
+export function TextArea({
+  label,
+  className = "",
+  ...props
+}: TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string }) {
+  return (
+    <label className={`block ${className}`}>
+      <span className="mb-1.5 block text-sm font-medium text-navy">{label}</span>
+      <textarea
+        rows={3}
+        className="block w-full rounded-lg border border-navy/15 bg-white px-3.5 py-2.5 text-base text-navy outline-none placeholder:text-navy/35 focus:border-rust focus:ring-2 focus:ring-rust/20"
+        {...props}
+      />
+    </label>
+  );
 }

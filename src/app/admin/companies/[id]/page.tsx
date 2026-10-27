@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useCompanies } from "@/components/companies";
 import { CompanyForm } from "@/components/company-form";
+import { RequestQueue } from "@/components/request-queue";
 import { Button, Card, ErrorText, Field, PageTitle } from "@/components/ui";
 import { money } from "@/lib/format";
 import { store } from "@/lib/store";
@@ -54,6 +55,9 @@ export default function CompanyPage() {
         }
       />
 
+      <RequestQueue companyId={company.id} />
+
+      <h2 className="mb-3 mt-10 text-lg font-bold">Deal rates</h2>
       <div className="grid gap-4 sm:grid-cols-3">
         {SERVICES.map((s) => {
           const price = company[s.priceKey] ?? 0;
