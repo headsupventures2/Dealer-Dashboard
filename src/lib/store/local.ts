@@ -111,6 +111,18 @@ export function createLocalStore(opts: Options) {
       save(db);
     },
 
+    async changePassword(newPassword) {
+      const db = load();
+      const user = me(db);
+      if (!user) throw new Error("Not signed in");
+      user.password = newPassword;
+      save(db);
+    },
+
+    async sendPasswordReset() {
+      throw new Error("Password reset emails work once Supabase is connected.");
+    },
+
     async listCompanies() {
       const db = load();
       const me = db.users.find((u) => u.id === db.sessionUserId);

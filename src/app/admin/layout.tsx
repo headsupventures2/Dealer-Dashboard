@@ -104,6 +104,9 @@ function Sidebar({ onNavigate }: { onNavigate(): void }) {
 
       <div className="mt-6 border-t border-white/10 px-3 pt-4 text-sm">
         <p className="truncate text-white/60">{profile?.email}</p>
+        <Link href="/admin/account" onClick={onNavigate} className="mt-2 block font-semibold text-white/80 hover:text-white">
+          Account
+        </Link>
         <button
           onClick={async () => {
             await signOut();

@@ -62,6 +62,16 @@ export const supabaseStore: Store = {
     await supabase().auth.signOut();
   },
 
+  async changePassword(newPassword) {
+    const { error } = await supabase().auth.updateUser({ password: newPassword });
+    if (error) throw new Error(error.message);
+  },
+
+  async sendPasswordReset(email, redirectTo) {
+    const { error } = await supabase().auth.resetPasswordForEmail(email.trim(), { redirectTo });
+    if (error) throw new Error(error.message);
+  },
+
   async listCompanies() {
     const { data, error } = await supabase().from("companies").select("*").order("name");
     if (error) throw error;
@@ -124,6 +134,7 @@ export const supabaseStore: Store = {
       .select()
       .single();
     if (error) throw error;
+    void notifyNewRequest(data.id);
     return toJob(data);
   },
 
@@ -179,6 +190,19 @@ export const supabaseStore: Store = {
 };
 
 const BUCKET = "job-photos";
+
+/** Fire-and-forget email to Leading Edge; a failed email never blocks the dealer's request. */
+async function notifyNewRequest(jobId: string) {
+  try {
+    const { data } = await supabase().auth.getSession();
+    await fetch("/api/notify/new-request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session?.access_token ?? ""}` },
+      body: JSON.stringify({ jobId }),
+      keepalive: true, // finishes even if the dealer navigates away
+    });
+  } catch {}
+}
 
 // The bucket is private, so photos are shown through short-lived signed URLs.
 async function withUrls(rows: { id: string; job_id: string; type: Photo["type"]; storage_path: string; created_at: string }[]) {

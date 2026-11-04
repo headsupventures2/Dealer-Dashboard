@@ -6,6 +6,9 @@ export interface Store {
   currentProfile(): Promise<Profile | null>;
   signIn(email: string, password: string): Promise<Profile>;
   signOut(): Promise<void>;
+  changePassword(newPassword: string): Promise<void>;
+  /** Emails a reset link that lands on `redirectTo`. */
+  sendPasswordReset(email: string, redirectTo: string): Promise<void>;
 
   listCompanies(): Promise<Company[]>;
   getCompany(id: string): Promise<Company | null>;

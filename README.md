@@ -32,9 +32,25 @@ On the login page, **See it in action** opens a demo with made-up partners (Summ
 3. In **Authentication → Users**, add your own admin user (email + password), then run the snippet at the bottom of `schema.sql` with your email to make it an admin.
 4. Copy `.env.example` to `.env.local` and fill in the three keys from **Project Settings → API**.
 
+### Password resets
+
+Dealers can change their password under **Account**, and anyone can use **Forgot password?** on the login page.
+For the reset email link to work, in Supabase go to **Authentication → URL Configuration** and:
+
+- set **Site URL** to your live address (e.g. `https://dashboard.leadingedgeaviationdetail.com`)
+- add `https://YOUR-ADDRESS/reset-password` under **Redirect URLs**
+
+Supabase's built-in email sender only allows a few emails per hour. Before handing out logins, point Supabase at Resend:
+**Authentication → Emails → SMTP Settings**, host `smtp.resend.com`, port `465`, username `resend`, password = your Resend API key.
+
+## New-request emails
+
+When a dealer submits a request, Leading Edge gets an email with the vehicle, services, preferred date, and an **Open request** button.
+Set `RESEND_API_KEY` and `NOTIFY_EMAIL` (see `.env.example`). Until you verify your domain in Resend, emails can only go to the address you signed up to Resend with.
+
 ## Deploy on Vercel
 
-Import the repo in Vercel and add the same three environment variables. That's it.
+Import the repo in Vercel and add the environment variables from `.env.example` (the three Supabase keys, plus the Resend ones for emails).
 
 ## What's in it
 

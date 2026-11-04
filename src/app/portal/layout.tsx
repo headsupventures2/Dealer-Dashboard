@@ -31,6 +31,9 @@ function PortalShell({ children }: { children: ReactNode }) {
             <Link href="/portal/history" className="hidden text-navy/70 hover:text-navy sm:block">
               Vehicle history
             </Link>
+            <Link href="/portal/account" className="text-navy/70 hover:text-navy">
+              Account
+            </Link>
             <button
               onClick={async () => {
                 await signOut();

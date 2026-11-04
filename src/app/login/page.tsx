@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ModeBanner } from "@/components/mode-banner";
@@ -82,6 +83,9 @@ export default function LoginPage() {
               <Button type="submit" disabled={busy} className="w-full">
                 {busy ? "Signing in…" : "Sign in"}
               </Button>
+              <Link href="/forgot-password" className="block text-center text-sm font-semibold text-navy/60 hover:text-navy">
+                Forgot password?
+              </Link>
             </form>
           </div>
           <div className="mt-5 rounded-2xl border border-line bg-white/60 p-5 text-center">
