@@ -7,6 +7,9 @@ export const isSupabaseConfigured = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
 );
 
+/** Google sign-in is switched on with NEXT_PUBLIC_GOOGLE_SIGN_IN=on once the provider is set up in Supabase. */
+export const isGoogleSignInEnabled = isSupabaseConfigured && process.env.NEXT_PUBLIC_GOOGLE_SIGN_IN === "on";
+
 const baseStore = isSupabaseConfigured ? supabaseStore : previewStore;
 
 // Demo mode swaps in the in-browser demo store, even when Supabase is live.

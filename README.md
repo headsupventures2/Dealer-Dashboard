@@ -43,6 +43,17 @@ For the reset email link to work, in Supabase go to **Authentication → URL Con
 Supabase's built-in email sender only allows a few emails per hour. Before handing out logins, point Supabase at Resend:
 **Authentication → Emails → SMTP Settings**, host `smtp.resend.com`, port `465`, username `resend`, password = your Resend API key.
 
+### Sign in with Google
+
+Dealers (and you) can sign in with Google instead of a password. Only emails you've added as logins get in; anyone else sees "That Google account isn't set up for the dashboard."
+
+1. In Google Cloud Console → **APIs & Services → Credentials**, open your OAuth client (type **Web application**) and add this **Authorized redirect URI**: `https://<your-project-ref>.supabase.co/auth/v1/callback`
+2. On the **OAuth consent screen**, set the app to **In production** so any Google account can sign in (in Testing, only listed test users can).
+3. In Supabase → **Authentication → Sign In / Providers → Google**, turn it on and paste the Client ID and Client Secret.
+4. In Vercel, add `NEXT_PUBLIC_GOOGLE_SIGN_IN=on` and redeploy. The button appears on the login page.
+
+To add a dealer who'll use Google, add their login with just their email and leave the password blank.
+
 ## New-request emails
 
 When a dealer submits a request, Leading Edge gets an email with the vehicle, services, preferred date, and an **Open request** button.

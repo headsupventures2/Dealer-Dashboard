@@ -10,6 +10,8 @@ interface AuthState {
   profile: Profile | null;
   loading: boolean;
   demo: boolean;
+  /** Why the last sign-in didn't stick (e.g. a Google account that isn't a dealer login). */
+  authError: string;
   signIn(email: string, password: string): Promise<Profile>;
   /** Signs into the sales demo. `fresh` rebuilds the sample data first. */
   startDemo(role: Role, fresh: boolean): Promise<Profile>;
@@ -22,15 +24,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [demo, setDemoState] = useState(false);
+  const [authError, setAuthError] = useState("");
 
   useEffect(() => {
+    const oauthError = takeOAuthError();
     store
       .currentProfile()
       .then((p) => {
         setDemoState(isDemo());
         setProfile(p);
+        if (oauthError) setAuthError(oauthError);
       })
-      .catch(() => setProfile(null))
+      .catch((err) => {
+        setProfile(null);
+        setAuthError(err instanceof Error ? err.message : "Sign in failed");
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -38,6 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profile,
     loading,
     demo,
+    authError,
     async startDemo(role, fresh) {
       setDemo(true);
       if (fresh) await loadDemo();
@@ -47,6 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return p;
     },
     async signIn(email, password) {
+      setAuthError("");
       const p = await store.signIn(email, password);
       setProfile(p);
       return p;
@@ -60,6 +70,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+/** Reads (and clears from the address bar) an error Google/Supabase sent back after sign-in. */
+function takeOAuthError() {
+  const params = new URLSearchParams(window.location.search + "&" + window.location.hash.slice(1));
+  const description = params.get("error_description");
+  if (!description) return "";
+  window.history.replaceState(null, "", window.location.pathname);
+  return /signup/i.test(description)
+    ? "That Google account isn't set up for the dashboard. Ask Leading Edge Detailing to add your email."
+    : description;
 }
 
 export function useAuth() {

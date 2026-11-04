@@ -111,6 +111,10 @@ export function createLocalStore(opts: Options) {
       save(db);
     },
 
+    async signInWithGoogle() {
+      throw new Error("Google sign-in works once Supabase is connected.");
+    },
+
     async changePassword(newPassword) {
       const db = load();
       const user = me(db);

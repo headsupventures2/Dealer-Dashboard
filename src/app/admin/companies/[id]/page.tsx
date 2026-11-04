@@ -99,7 +99,7 @@ function ClientLogins({ companyId }: { companyId: string }) {
 
   async function add(e: FormEvent) {
     e.preventDefault();
-    if (password.length < 8) return setError("Password must be at least 8 characters");
+    if (password && password.length < 8) return setError("Password must be at least 8 characters, or leave it blank");
     setBusy(true);
     setError("");
     try {
@@ -132,9 +132,8 @@ function ClientLogins({ companyId }: { companyId: string }) {
       <form onSubmit={add} className="mt-5 grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
         <Field label="Email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
         <Field
-          label="Temporary password"
+          label="Temporary password (optional)"
           type="text"
-          required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
@@ -142,7 +141,7 @@ function ClientLogins({ companyId }: { companyId: string }) {
           {busy ? "Adding…" : "Add login"}
         </Button>
       </form>
-      <p className="mt-2 text-xs text-navy/55">Password must be 8+ characters. Share it with them directly.</p>
+      <p className="mt-2 text-xs text-navy/55">Leave the password blank if they&apos;ll use Sign in with Google with this email. Otherwise use 8+ characters and share it with them directly.</p>
       <div className="mt-3">
         <ErrorText>{error}</ErrorText>
       </div>

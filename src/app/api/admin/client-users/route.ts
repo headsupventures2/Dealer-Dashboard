@@ -20,13 +20,14 @@ export async function POST(request: Request) {
     email?: string;
     password?: string;
   };
-  if (!companyId || !email || !password || password.length < 8) {
-    return Response.json({ error: "Company, email, and a password of 8+ characters are required" }, { status: 400 });
+  // Password is optional: without one, the dealer signs in with Google using this email.
+  if (!companyId || !email || (password && password.length < 8)) {
+    return Response.json({ error: "Company and email are required; a password needs 8+ characters" }, { status: 400 });
   }
 
   const { data: created, error } = await admin.auth.admin.createUser({
     email: email.trim().toLowerCase(),
-    password,
+    password: password || undefined,
     email_confirm: true,
   });
   if (error || !created.user) return Response.json({ error: error?.message ?? "Could not create user" }, { status: 400 });

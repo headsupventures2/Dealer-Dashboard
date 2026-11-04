@@ -4,6 +4,8 @@ import type { Store } from "./types";
 
 let client: SupabaseClient | null = null;
 
+const NOT_LINKED = "This login isn't linked to an account yet. Ask Leading Edge Detailing to add your email.";
+
 export function supabase() {
   client ??= createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
   return client;
@@ -44,7 +46,14 @@ export const supabaseStore: Store = {
 
   async currentProfile() {
     const { data } = await supabase().auth.getSession();
-    return data.session ? profileFor(data.session.user.id) : null;
+    if (!data.session) return null;
+    const profile = await profileFor(data.session.user.id);
+    if (!profile) {
+      // e.g. signed in with Google but never added as a dealer login
+      await supabase().auth.signOut();
+      throw new Error(NOT_LINKED);
+    }
+    return profile;
   },
 
   async signIn(email, password) {
@@ -53,9 +62,14 @@ export const supabaseStore: Store = {
     const profile = await profileFor(data.user.id);
     if (!profile) {
       await supabase().auth.signOut();
-      throw new Error("This login isn't linked to an account yet. Contact Leading Edge Detailing.");
+      throw new Error(NOT_LINKED);
     }
     return profile;
+  },
+
+  async signInWithGoogle(redirectTo) {
+    const { error } = await supabase().auth.signInWithOAuth({ provider: "google", options: { redirectTo } });
+    if (error) throw new Error(error.message);
   },
 
   async signOut() {

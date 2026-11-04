@@ -5,6 +5,8 @@ export interface Store {
   mode: "supabase" | "preview" | "demo";
   currentProfile(): Promise<Profile | null>;
   signIn(email: string, password: string): Promise<Profile>;
+  /** Sends the browser to Google; it comes back to `redirectTo` signed in. */
+  signInWithGoogle(redirectTo: string): Promise<void>;
   signOut(): Promise<void>;
   changePassword(newPassword: string): Promise<void>;
   /** Emails a reset link that lands on `redirectTo`. */
